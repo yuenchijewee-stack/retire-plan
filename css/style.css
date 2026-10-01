@@ -1,0 +1,87 @@
+/* 退休规划测算器样式 */
+:root {
+  --bg: #f7f5ef;
+  --card: #ffffff;
+  --ink: #2b2b2b;
+  --muted: #6b6b6b;
+  --accent: #2f6f4f;
+  --accent-soft: #e7f0ea;
+  --warn: #a3542f;
+  --line: #e3ded2;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  background: var(--bg); color: var(--ink);
+  line-height: 1.6;
+}
+header {
+  background: var(--accent); color: #fff;
+  padding: 28px 20px; text-align: center;
+}
+header h1 { margin: 0 0 6px; font-size: 26px; }
+header .subtitle { margin: 4px 0; opacity: .92; }
+header .privacy { margin: 8px 0 0; font-size: 13px; opacity: .85; }
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+h2 { border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+h3 { margin-top: 34px; }
+fieldset {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px; margin: 14px 0;
+}
+legend { font-weight: bold; padding: 0 8px; }
+label { display: block; margin: 8px 0; font-size: 15px; }
+label input[type="number"], label input[type="text"] {
+  width: 200px; padding: 6px 8px; margin-left: 8px;
+  border: 1px solid #c9c4b6; border-radius: 6px; font-size: 15px;
+}
+label input[type="checkbox"] { margin-right: 6px; }
+.radios label { display: inline-block; margin-right: 18px; }
+.subfields { margin-top: 8px; padding: 10px 12px; background: #faf8f2; border-radius: 8px; }
+.hint, .note { font-size: 13px; color: var(--muted); }
+#runBtn {
+  display: block; width: 100%; max-width: 320px; margin: 22px auto;
+  padding: 14px; font-size: 18px; font-weight: bold;
+  background: var(--accent); color: #fff; border: none; border-radius: 10px;
+  cursor: pointer;
+}
+#runBtn:hover { background: #265c41; }
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px 18px; margin: 12px 0;
+}
+.headline { background: var(--accent-soft); border: 1px solid var(--accent); }
+.headline .big { font-size: 34px; font-weight: bold; color: var(--accent); }
+.headline .fail { font-size: 18px; color: var(--warn); font-weight: bold; }
+.cards { display: flex; gap: 12px; flex-wrap: wrap; }
+.cards .card { flex: 1 1 260px; }
+.cards .card h4 { margin: 0 0 8px; }
+.cards .card .best { color: var(--accent); font-weight: bold; }
+.stat { display: flex; justify-content: space-between; font-size: 14px; margin: 4px 0; }
+.stat b { font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; background: var(--card); border-radius: 10px; border: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { background: #f1ede2; position: sticky; top: 0; }
+td:first-child, th:first-child { text-align: left; }
+tr.hl td { background: var(--accent-soft); font-weight: bold; }
+.neg { color: var(--warn); }
+.chartbox { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin: 12px 0; }
+.chartbox canvas { max-height: 380px; }
+details { margin-top: 24px; }
+summary { cursor: pointer; font-weight: bold; font-size: 16px; padding: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.assump { font-size: 13px; color: var(--muted); }
+.assump li { margin: 6px 0; }
+footer { text-align: center; padding: 24px 16px 40px; }
+.disclaimer {
+  display: inline-block; max-width: 900px;
+  font-size: 14px; font-weight: bold; color: var(--warn);
+  border: 1px solid var(--warn); border-radius: 8px; padding: 10px 16px;
+  background: #fdf6ef;
+}
+select { padding: 6px 8px; font-size: 14px; border-radius: 6px; }
+@media (max-width: 700px) {
+  label input[type="number"] { width: 150px; }
+  .cards .card { flex: 1 1 100%; }
+}
