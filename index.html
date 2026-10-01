@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>退休规划测算器</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/tax.js"></script>
+<script src="js/engine.js"></script>
+</head>
+<body>
+<div id="bootWarn" style="display:none;background:#b3261e;color:#fff;padding:12px 16px;font-size:15px;line-height:1.6;">
+  页面没有完整加载：计算文件（js/ 文件夹）没能载入，"开始测算"按钮不会工作。<br>
+  请先把 zip 压缩包<strong>右键 → 全部解压缩</strong>，再打开解压后文件夹里的 index.html（不要直接在压缩包里双击打开）。
+</div>
+<header>
+  <h1>退休规划测算器</h1>
+  <p class="subtitle">哪年能退休？退休后逐年账本 · Roth 转换策略对比 · 加州 vs 内华达</p>
+  <p class="privacy">所有计算都在您的浏览器本地完成，数据不会上传到任何服务器。</p>
+</header>
+
+<main>
+  <section id="inputs">
+    <h2>输入您的情况</h2>
+    <p class="note">报税身份：<strong>夫妻联合申报（MFJ）</strong>。以下金额均为美元；默认值为中性示例，请按您的实际情况修改。</p>
+
+    <fieldset>
+      <legend>个人与家庭</legend>
+      <label>本人年龄 <input type="number" id="selfAge" value="45" min="25" max="80"></label>
+      <label>配偶年龄 <input type="number" id="spouseAge" value="43" min="25" max="80"></label>
+      <label>规划到几岁 <input type="number" id="horizonAge" value="95" min="70" max="110"></label>
+      <label>期末缓冲金额（$） <input type="number" id="buffer" value="0" min="0" step="10000"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>当前资产</legend>
+      <label>应税账户余额（$） <input type="number" id="balTaxable" value="100000" min="0" step="5000"></label>
+      <label>税前账户余额 401(k)/IRA（$） <input type="number" id="balPretax" value="200000" min="0" step="5000"></label>
+      <label>Roth 账户余额（$） <input type="number" id="balRoth" value="30000" min="0" step="5000"></label>
+      <label>税前账户中本人的占比（%，用于分别算 RMD） <input type="number" id="pretaxSelfFrac" value="50" min="0" max="100"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>收入与储蓄</legend>
+      <label>当前税前工资（$） <input type="number" id="salary" value="150000" min="0" step="5000"></label>
+      <label>工资年增长率（%） <input type="number" id="salaryGrowth" value="3" min="0" max="10" step="0.5"></label>
+      <label>年缴存 — 税前 401(k)（$） <input type="number" id="c401k" value="20000" min="0" step="1000"></label>
+      <label>年缴存 — Roth（$） <input type="number" id="cRoth" value="7000" min="0" step="500"></label>
+      <label>年缴存 — 应税账户（$） <input type="number" id="cTaxable" value="10000" min="0" step="1000"></label>
+      <label>公司 match（$） <input type="number" id="match" value="6000" min="0" step="500"></label>
+      <label>退休前两年 MAGI 估算（$，用于 IRMAA 两年回溯；留空=按工资） <input type="number" id="preRetireMAGI" placeholder="留空则按工资" min="0" step="5000"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>退休目标</legend>
+      <label>退休后年支出（今日美元，$） <input type="number" id="spendReal" value="80000" min="0" step="5000"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>社安金</legend>
+      <p class="hint">62 岁可最早领取（约打 7 折），67 岁全额，70 岁约多 24%。金额填 SSA 对账单上的今日美元年金额。</p>
+      <label>本人年金额（$） <input type="number" id="ssSelf" value="30000" min="0" step="1000"></label>
+      <label>本人领取年龄 <input type="number" id="ssSelfAge" value="67" min="62" max="70"></label>
+      <label>配偶年金额（$） <input type="number" id="ssSpouse" value="20000" min="0" step="1000"></label>
+      <label>配偶领取年龄 <input type="number" id="ssSpouseAge" value="67" min="62" max="70"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>州与搬迁</legend>
+      <div class="radios">
+        <label><input type="radio" name="stateMode" value="CA"> 留在加州</label>
+        <label><input type="radio" name="stateMode" value="NV"> 搬到 Nevada</label>
+        <label><input type="radio" name="stateMode" value="COMPARE" checked> 对比两种方案</label>
+      </div>
+      <label>搬家一次性成本（$，搬到 Nevada 的方案在退休当年计入支出） <input type="number" id="moveCost" value="0" min="0" step="1000"></label>
+      <p class="hint">加州：累进税率 1%–12.3%，CA 应税收入超 $1M 部分另加 1%；资本利得按普通收入计税；社安金免州税。内华达：无州个人所得税。</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>住房安排（可选）</legend>
+      <label class="check"><input type="checkbox" id="houseEnabled"> 退休前后出售现有住房</label>
+      <div id="houseFields" class="subfields">
+        <label>当前房子市值（$） <input type="number" id="housePrice" value="800000" min="0" step="10000"></label>
+        <label>成本 basis（$） <input type="number" id="houseBasis" value="400000" min="0" step="10000"></label>
+        <label>卖房费用率（%，中介费等） <input type="number" id="costRate" value="6" min="0" max="15" step="0.5"></label>
+        <label class="check"><input type="checkbox" id="twoYear" checked> 满足 2 年自住（Section 121：联合申报 $500K 免税额）</label>
+        <div class="radios">
+          <label><input type="radio" name="saleMode" value="retire" checked> 退休当年出售</label>
+          <label><input type="radio" name="saleMode" value="fixed"> 指定年份出售 <input type="number" id="saleYear" value="2045" min="2026" max="2100"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="downsize"> 换购小房</label>
+        <label>新房购入价（$） <input type="number" id="newPrice" value="500000" min="0" step="10000"></label>
+        <p class="hint">卖房当年：应税 gain 按长期资本利得计税并计入当年 MAGI（影响 IRMAA 与 Roth 转换空间）；净到手=售价−费用−卖房税−新房价，为正进入应税账户，为负增加当年支出。</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>投资与回报假设</legend>
+      <label>通胀（%） <input type="number" id="inflation" value="2.5" min="0" max="8" step="0.1"></label>
+      <label>应税账户年回报（%） <input type="number" id="retTaxable" value="7" min="0" max="15" step="0.5"></label>
+      <label>税前账户年回报（%） <input type="number" id="retPretax" value="5" min="0" max="15" step="0.5"></label>
+      <label>Roth 年回报（%） <input type="number" id="retRoth" value="7" min="0" max="15" step="0.5"></label>
+      <label>股息率（应税账户，%） <input type="number" id="divYield" value="2" min="0" max="8" step="0.5"></label>
+      <label>卖出股票时利得占比（%） <input type="number" id="gainRatio" value="30" min="0" max="100"></label>
+    </fieldset>
+
+    <button id="runBtn">开始测算</button>
+    <p id="calcNote" class="hint" style="display:none">计算中，请稍候…</p>
+  </section>
+
+  <section id="results" style="display:none">
+    <h2>测算结果</h2>
+
+    <div id="headline" class="card headline"></div>
+
+    <h3>各退休年龄 → 期末净资产（三策略）</h3>
+    <div class="tablewrap"><table id="solverTable"></table></div>
+
+    <h3 id="stratTitle">策略对比</h3>
+    <div id="stratCards" class="cards"></div>
+
+    <div id="compareSection" style="display:none">
+      <h3>加州 vs 内华达 对比</h3>
+      <div id="compareCards" class="cards"></div>
+      <h4>逐年税差（加州 − 内华达，选中策略）</h4>
+      <div class="chartbox"><canvas id="diffChart"></canvas></div>
+    </div>
+
+    <h3>净资产走势</h3>
+    <div class="chartbox"><canvas id="nwChart"></canvas></div>
+
+    <h3>年度税与 Roth 转换
+      <select id="taxStratSel"></select>
+    </h3>
+    <div class="chartbox"><canvas id="taxChart"></canvas></div>
+
+    <h3>敏感性分析（最早可行退休年龄）</h3>
+    <div class="tablewrap"><table id="sensTable"></table></div>
+
+    <details>
+      <summary>逐年明细账本</summary>
+      <div class="tablewrap"><table id="yearTable"></table></div>
+    </details>
+
+    <h3>模型假设与简化说明</h3>
+    <ul class="assump">
+      <li>联邦税按夫妻联合申报（MFJ）口径：2026 年税表为基准按通胀指数化；标准扣除含 65 岁以上附加；2025–2028 年每位 65 岁以上另有 $6,000 老年扣除（MAGI 超 $150K 递减）。</li>
+      <li>IRMAA 阈值、NIIT $250K 起征点、社安金计税阈值（$32K/$44K）按法律规定不随通胀调整；IRMAA 按两年前的 MAGI 回溯，65 岁起按人征收，保费按通胀放大。</li>
+      <li>RMD 从 75 岁开始，按夫妻各自税前余额分别计算（比例按输入）。</li>
+      <li>Roth 转换做到本人 75 岁为止；策略B/C 分别填满 12%/22% 联邦税档上限（应税收入口径）。</li>
+      <li>加州税为简化处理：CA 应税收入 = 联邦 AGI − 应税社安金 − CA 标准扣除；资本利得无优惠；免税额 credit 高收入逐步取消简化为全额；税率表与扣除按通胀指数化，$1M 的 1% 附加税门槛冻结。</li>
+      <li>累积期未逐年计税，缴存金额直接计入账户；搬家成本计入搬迁当年支出。</li>
+      <li>求解器以策略B（填满 12% 档）为基准；激进或保守策略的实际可行年龄见策略对比卡。</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <p class="disclaimer">测算仅供教育参考，不构成税务或投资建议。具体税务问题请咨询专业人士。</p>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+// 自检：如果引擎文件没加载出来（常见原因是直接在 zip 里双击打开），显示顶部红色横幅。
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    if (!window.Tax || !window.Engine) {
+      document.getElementById('bootWarn').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
+  }, 800);
+});
+</script>
+</body>
+</html>
